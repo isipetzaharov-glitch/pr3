@@ -1,3 +1,4 @@
+// lib/screens/orders_screen.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -27,8 +28,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
     super.initState();
     final q = OrderQuery.fromParams(widget.urlParams);
     _searchCtrl = TextEditingController(text: q.search);
-    // Синхронизируем URL -> notifier
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       context.read<OrderListNotifier>().applyQuery(q);
     });
   }
@@ -43,13 +44,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
   void _onSearchChanged(String v) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () {
-      final notifier = context.read<OrderListNotifier>();
-      notifier.applyQuery(notifier.query.copyWith(search: v));
-      _syncUrl(notifier.query);
+      if (!mounted) return;
+      final n = context.read<OrderListNotifier>();
+      n.applyQuery(n.query.copyWith(search: v));
+      _syncUrl(n.query);
     });
   }
 
   void _syncUrl(OrderQuery q) {
+    if (!mounted) return;
     final uri = Uri(path: '/orders', queryParameters: q.toParams());
     context.go(uri.toString());
   }
@@ -57,6 +60,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   Widget build(BuildContext context) {
     final n = context.watch<OrderListNotifier>();
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(12),
@@ -85,7 +89,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateDialog(context, n),
+        onPressed: () => context.go('/orders/new'),
         child: const Icon(Icons.add),
       ),
     );
@@ -111,7 +115,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
             onChanged: _onSearchChanged,
           ),
         ),
-        // Вид услуги
         SizedBox(
           width: 180,
           child: DropdownButtonFormField<int?>(
@@ -134,7 +137,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
             },
           ),
         ),
-        // Мастер
         SizedBox(
           width: 180,
           child: DropdownButtonFormField<int?>(
@@ -156,7 +158,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
             },
           ),
         ),
-        // Год от
         SizedBox(
           width: 110,
           child: TextFormField(
@@ -216,7 +217,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
               final ok = await _confirm(context, 'Удалить выбранные записи?');
               if (ok == true) {
                 await n.deleteSelected();
-                if (context.mounted) _syncUrl(n.query);
+                _syncUrl(n.query);
               }
             },
             child: const Text('Удалить'),
@@ -257,7 +258,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
       );
     }
 
-    // Адаптив: <600px — карточки, иначе — таблица
     return LayoutBuilder(
       builder: (context, c) {
         if (c.maxWidth < 600) return _cardsList(context, n);
@@ -311,6 +311,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
               icon: const Icon(Icons.visibility),
             ),
             IconButton(
+              tooltip: 'Редактировать',
+              onPressed: () => context.go('/orders/${o.id}/edit'),
+              icon: const Icon(Icons.edit),
+            ),
+            IconButton(
               tooltip: 'Удалить',
               onPressed: () async {
                 final ok = await _confirm(
@@ -345,60 +350,27 @@ class _OrdersScreenState extends State<OrdersScreen> {
               'VIN: ${o.vin}\nГод: ${o.year} • ${o.cost.toStringAsFixed(0)} ₽',
             ),
             isThreeLine: true,
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () async {
-                final ok = await _confirm(context, 'Удалить заказ?');
-                if (ok == true) await n.softDeleteOne(o.id);
-              },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => context.go('/orders/${o.id}/edit'),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () async {
+                    final ok = await _confirm(context, 'Удалить заказ?');
+                    if (ok == true) await n.softDeleteOne(o.id);
+                  },
+                ),
+              ],
             ),
             onTap: () => context.go('/orders/${o.id}'),
           ),
         );
       },
     );
-  }
-
-  Future<void> _showCreateDialog(
-    BuildContext context,
-    OrderListNotifier n,
-  ) async {
-    // Минимальный диалог для создания заказа
-    final titleCtrl = TextEditingController();
-    final vinCtrl = TextEditingController();
-    final created = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Новый заказ'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleCtrl,
-              decoration: const InputDecoration(labelText: 'Название'),
-            ),
-            TextField(
-              controller: vinCtrl,
-              decoration: const InputDecoration(labelText: 'VIN'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Создать'),
-          ),
-        ],
-      ),
-    );
-    if (created == true && context.mounted) {
-      final repo = context.read<OrderListNotifier>();
-      await repo.load();
-    }
   }
 
   Future<bool?> _confirm(BuildContext context, String text) {

@@ -1,13 +1,13 @@
 class RepairOrder {
   final int id;
-  final String title; // напр. "Замена масла Toyota Camry"
-  final String vin; // аналог ISBN — уникальный идентификатор авто
-  final int year; // год выпуска авто
-  final int clientId;
-  final int serviceId; // вид услуги (аналог жанра)
-  final int masterId; // мастер (аналог издательства)
+  final String title;
+  final String vin;
+  final int year;
+  final int clientId; // many-to-one
+  final int masterId; // many-to-one (было serviceId/publisherId)
+  final List<int> serviceIds; // many-to-many (услуги)
   final double cost;
-  final String status; // new / in_progress / done
+  final String status;
   final DateTime? deletedAt;
 
   const RepairOrder({
@@ -16,8 +16,8 @@ class RepairOrder {
     required this.vin,
     required this.year,
     required this.clientId,
-    required this.serviceId,
     required this.masterId,
+    required this.serviceIds,
     required this.cost,
     required this.status,
     this.deletedAt,
@@ -30,8 +30,8 @@ class RepairOrder {
     String? vin,
     int? year,
     int? clientId,
-    int? serviceId,
     int? masterId,
+    List<int>? serviceIds,
     double? cost,
     String? status,
     DateTime? deletedAt,
@@ -43,11 +43,39 @@ class RepairOrder {
       vin: vin ?? this.vin,
       year: year ?? this.year,
       clientId: clientId ?? this.clientId,
-      serviceId: serviceId ?? this.serviceId,
       masterId: masterId ?? this.masterId,
+      serviceIds: serviceIds ?? this.serviceIds,
       cost: cost ?? this.cost,
       status: status ?? this.status,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'vin': vin,
+    'year': year,
+    'clientId': clientId,
+    'masterId': masterId,
+    'serviceIds': serviceIds,
+    'cost': cost,
+    'status': status,
+    'deletedAt': deletedAt?.toIso8601String(),
+  };
+
+  factory RepairOrder.fromJson(Map<String, dynamic> json) => RepairOrder(
+    id: json['id'] as int? ?? 0,
+    title: json['title'] as String? ?? '',
+    vin: json['vin'] as String? ?? '',
+    year: json['year'] as int? ?? 0,
+    clientId: json['clientId'] as int? ?? 0,
+    masterId: json['masterId'] as int? ?? 0,
+    serviceIds: (json['serviceIds'] as List?)?.cast<int>() ?? const [],
+    cost: (json['cost'] as num?)?.toDouble() ?? 0,
+    status: json['status'] as String? ?? 'new',
+    deletedAt: json['deletedAt'] == null
+        ? null
+        : DateTime.tryParse(json['deletedAt'] as String),
+  );
 }

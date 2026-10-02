@@ -1,66 +1,86 @@
 import '../models/client.dart';
+import '../models/service_card.dart';
 
 final seedClients = <Client>[
-  const Client(
+  Client(
     id: 1,
     lastName: 'Иванов',
     firstName: 'Пётр',
+    email: 'ivanov@mail.ru',
     phone: '+7-900-100-01-01',
     country: 'Россия',
+    card: ServiceCard(
+      number: 'SC-0001',
+      issuedAt: DateTime(2023, 5, 1),
+      discountCategory: 'серебро',
+    ),
   ),
-  const Client(
+  Client(
     id: 2,
     lastName: 'Смирнова',
     firstName: 'Анна',
+    email: 'smirnova@mail.ru',
     phone: '+7-900-100-01-02',
     country: 'Россия',
+    card: ServiceCard(
+      number: 'SC-0002',
+      issuedAt: DateTime(2023, 6, 10),
+      discountCategory: 'золото',
+    ),
   ),
-  const Client(
+  Client(
     id: 3,
     lastName: 'Кузнецов',
     firstName: 'Олег',
+    email: 'kuznetsov@mail.ru',
     phone: '+7-900-100-01-03',
     country: 'Беларусь',
   ),
-  const Client(
+  Client(
     id: 4,
     lastName: 'Попова',
     firstName: 'Мария',
+    email: 'popova@mail.ru',
     phone: '+7-900-100-01-04',
     country: 'Россия',
   ),
-  const Client(
+  Client(
     id: 5,
     lastName: 'Соколов',
     firstName: 'Дмитрий',
+    email: 'sokolov@mail.ru',
     phone: '+7-900-100-01-05',
     country: 'Казахстан',
   ),
-  const Client(
+  Client(
     id: 6,
     lastName: 'Лебедева',
     firstName: 'Ольга',
+    email: 'lebedeva@mail.ru',
     phone: '+7-900-100-01-06',
     country: 'Россия',
   ),
-  const Client(
+  Client(
     id: 7,
     lastName: 'Новиков',
     firstName: 'Сергей',
+    email: 'novikov@mail.ru',
     phone: '+7-900-100-01-07',
     country: 'Армения',
   ),
-  const Client(
+  Client(
     id: 8,
     lastName: 'Морозова',
     firstName: 'Елена',
+    email: 'morozova@mail.ru',
     phone: '+7-900-100-01-08',
     country: 'Россия',
   ),
-  const Client(
+  Client(
     id: 9,
     lastName: 'Волков',
     firstName: 'Игорь',
+    email: 'volkov@mail.ru',
     phone: '+7-900-100-01-09',
     country: 'Грузия',
   ),

@@ -11,7 +11,10 @@ abstract interface class ClientRepository {
     bool includeDeleted = false,
   });
   Future<Client?> findById(int id);
+  Future<Client> create(Client c);
+  Future<Client> update(Client c);
   Future<void> softDelete(int id);
   Future<void> restore(int id);
   Future<int> deleteMany(List<int> ids);
+  Future<bool> emailExists(String email, {int? exceptId});
 }
